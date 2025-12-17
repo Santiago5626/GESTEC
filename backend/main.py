@@ -8,7 +8,10 @@ app = FastAPI(title="Helpdesk API", version="1.0.0")
 origins = [
     "http://localhost:5173",
     "http://localhost:3000",
-    "*" # Permitir todo para producción
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://gestec.onrender.com",
+    "https://gestecnicos.onrender.com"
 ]
 
 app.add_middleware(

@@ -1,17 +1,12 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from database import get_db
-from models.user import User
-from services.helpdesk_service import find_technician_id_by_name
-import requests
-import json
-from services.helpdesk_service import API_URL, HEADERS
+from database import get_db_sync # Use sync db
 
 router = APIRouter(prefix="/api/debug")
 
 @router.get("/refresh-ids")
 def refresh_technician_ids(
-    db: Session = Depends(get_db), 
+    db: Session = Depends(get_db_sync), # Sync session 
     target_user: str = None, # Opcional: refrescar solo a "Juan"
     force_all: bool = False  # Opcional: forzar re-scan de todos
 ):

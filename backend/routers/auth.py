@@ -39,10 +39,16 @@ async def login(credentials: LoginRequest, db: AsyncSession = Depends(get_db)):
     # This is a fallback/sync mechanism to keep DB updated with external API ID
     if user.role == 'technical' and not user.technician_id:
          print(f"Technician ID missing for {user.name}, fetching from API...")
-         tech_id_api = await find_technician_id_by_name(user.name)
-         if tech_id_api:
-             user.technician_id = tech_id_api
-             await db.commit() # Save for future login
+         # Run sync api call in thread to avoid blocking main loop
+         import asyncio
+         loop = asyncio.get_running_loop()
+         try:
+            tech_id_api = await loop.run_in_executor(None, find_technician_id_by_name, user.name)
+            if tech_id_api:
+                user.technician_id = tech_id_api
+                await db.commit() # Save for future login
+         except Exception as e:
+            print(f"Error fetching tech id on login: {e}")
 
     return {
         "token": f"token-{user.role}-{user.id}",
