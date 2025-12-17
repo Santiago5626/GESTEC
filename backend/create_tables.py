@@ -54,6 +54,21 @@ async def init_db():
                 technician_id="326715"
             )
             session.add(jhon_user)
+
+        # Check and create Andres
+        result = await session.execute(select(User).where(User.email == "andres@gesttec.com"))
+        andres = result.scalars().first()
+
+        if not andres:
+            print("Creating Andres Cobo...")
+            andres_user = User(
+                name="Andres Juan Cobo",
+                email="andres@gesttec.com",
+                hashed_password="123456",
+                role="technical",
+                technician_id="123903"
+            )
+            session.add(andres_user)
         
         await session.commit()
         print("Database initialized with users.")
