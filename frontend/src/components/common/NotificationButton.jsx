@@ -27,42 +27,60 @@ export default function NotificationButton() {
     const subscribeUser = async () => {
         setLoading(true);
         try {
-            const api = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+            // Robust URL construction
+            let baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+            // Ensure no trailing slash
+            if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+
+            // Build proper API endpoint URL handling /api suffix
+            let endpointUrl = baseUrl;
+            // If baseUrl doesn't end in /api, append it (assuming backend lives at /api)
+            if (!baseUrl.endsWith('/api')) {
+                endpointUrl = `${baseUrl}/api`;
+            }
+
+            console.log(`[Push] Base API URL: ${baseUrl}`);
+            console.log(`[Push] Using Endpoint: ${endpointUrl}`);
 
             // 1. Get Public Key
-            const keyRes = await axios.get(`${api}/notifications/vapid-public-key`);
+            const keyRes = await axios.get(`${endpointUrl}/notifications/vapid-public-key`);
             const publicKey = keyRes.data.publicKey;
+            console.log("[Push] Public Key received");
 
             // 2. Request Permission
             const perm = await Notification.requestPermission();
             setPermission(perm);
 
             if (perm === 'granted') {
-                // 3. Register SW (VitePWA registers it automatically, wait for ready)
+                // 3. Register SW
                 const registration = await navigator.serviceWorker.ready;
 
-                // 4. Subscribe
-                const subscription = await registration.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(publicKey)
-                });
+                // 4. Subscribe (prevent error if already subscribed)
+                let subscription = await registration.pushManager.getSubscription();
+                if (!subscription) {
+                    subscription = await registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(publicKey)
+                    });
+                }
 
                 // 5. Send to Backend
-                const email = localStorage.getItem('userEmail'); // Asumimos que guardamos el email al login
+                const user = JSON.parse(localStorage.getItem('user'));
+                const email = user?.email || localStorage.getItem('userEmail') || 'tecnico@gesttec.com';
 
-                await axios.post(`${api}/notifications/subscribe?x_user_email=${email}`, {
+                await axios.post(`${endpointUrl}/notifications/subscribe?x_user_email=${email}`, {
                     endpoint: subscription.endpoint,
                     keys: subscription.toJSON().keys
                 });
 
-                // Test notification (optional local)
-                // new Notification("Notificaciones Activadas!");
                 setSubscribed(true);
                 alert("¡Notificaciones activadas correctamente!");
             }
         } catch (error) {
             console.error("Error subscribing:", error);
-            alert("Error al activar notificaciones. " + error.message);
+            const status = error.response ? error.response.status : 'Network Error';
+            alert(`Error al activar notificaciones (${status}): ${error.message}`);
         } finally {
             setLoading(false);
         }
