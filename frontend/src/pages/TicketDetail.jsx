@@ -14,7 +14,7 @@ export default function TicketDetail() {
 
     useEffect(() => {
         // Fetch specific ticket details
-        axios.get(`http://localhost:8000/api/tickets/${id}`)
+        axios.get(`${import.meta.env.VITE_API_URL}/tickets/${id}`)
             .then(res => {
                 setTicket(res.data);
                 setLoading(false);

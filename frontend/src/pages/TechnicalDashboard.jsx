@@ -36,7 +36,7 @@ export default function TechnicalDashboard() {
         }
 
         // 2. Fetch from backend if no cache or expired
-        axios.get('http://localhost:8000/api/dashboard/stats', {
+        axios.get(`${import.meta.env.VITE_API_URL}/dashboard/stats`, {
             headers: {
                 'X-Technician-ID': techId || '',
                 'X-User-Name': user?.name || ''
