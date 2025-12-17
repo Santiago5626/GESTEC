@@ -135,11 +135,7 @@ async def get_tickets_for_technician(technician_id: str) -> List[Dict]:
                 "row_count": row_count,
                 "start_index": start_index,
                 "search_criteria": [
-                    {"field": "technician.id", "condition": "is", "value": technician_id},
-                    {"field": "status.name", "condition": "is_not", "value": "Closed"},
-                    {"field": "status.name", "condition": "is_not", "value": "Resolved"},
-                    {"field": "status.name", "condition": "is_not", "value": "Cerrado"},
-                    {"field": "status.name", "condition": "is_not", "value": "Resuelto"}
+                    {"field": "technician.id", "condition": "is", "value": technician_id}
                 ]
             }
         }
