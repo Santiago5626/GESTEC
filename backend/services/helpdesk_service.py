@@ -101,7 +101,23 @@ async def find_technician_id_by_name(name: str) -> Optional[str]:
 async def get_tickets_for_technician(technician_id: str) -> List[Dict]:
     """
     Obtiene los tickets abiertos/en servicio para un ID de técnico específico.
+    Utiliza caché en memoria (TTL 5 min) para optimizar.
     """
+    
+    # Simple Dictionary Cache: {tech_id: {'timestamp': time, 'data': []}}
+    # Nota: En una app real usar Redis. Aquí usamos variable global por simplicidad.
+    if not hasattr(get_tickets_for_technician, "cache"):
+        get_tickets_for_technician.cache = {}
+        
+    import time
+    CACHE_TTL = 300 # 5 minutos
+    
+    now = time.time()
+    cached = get_tickets_for_technician.cache.get(technician_id)
+    
+    if cached and (now - cached['timestamp'] < CACHE_TTL):
+        print(f"DEBUG: Returning cached tickets for {technician_id}")
+        return cached['data']
     if not technician_id:
         return []
 
@@ -119,7 +135,11 @@ async def get_tickets_for_technician(technician_id: str) -> List[Dict]:
                 "row_count": row_count,
                 "start_index": start_index,
                 "search_criteria": [
-                    {"field": "technician.id", "condition": "is", "value": technician_id}
+                    {"field": "technician.id", "condition": "is", "value": technician_id},
+                    {"field": "status.name", "condition": "is_not", "value": "Closed"},
+                    {"field": "status.name", "condition": "is_not", "value": "Resolved"},
+                    {"field": "status.name", "condition": "is_not", "value": "Cerrado"},
+                    {"field": "status.name", "condition": "is_not", "value": "Resuelto"}
                 ]
             }
         }
@@ -168,6 +188,12 @@ async def get_tickets_for_technician(technician_id: str) -> List[Dict]:
             print(f"Error fetching tickets: {e}")
             break
 
+    # Save to cache
+    get_tickets_for_technician.cache[technician_id] = {
+        'timestamp': time.time(),
+        'data': all_tickets
+    }
+    
     return all_tickets
 
 async def get_ticket_details(ticket_id: str) -> Optional[Dict]:
