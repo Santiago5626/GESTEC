@@ -6,8 +6,9 @@ app = FastAPI(title="Helpdesk API", version="1.0.0")
 
 # Configuración CORS
 origins = [
-    "http://localhost:5173", # Vite default
+    "http://localhost:5173",
     "http://localhost:3000",
+    "*" # Permitir todo para producción
 ]
 
 app.add_middleware(
