@@ -10,41 +10,64 @@ from services.helpdesk_service import API_URL, HEADERS
 router = APIRouter(prefix="/api/debug")
 
 @router.get("/refresh-ids")
-async def refresh_technician_ids(db: Session = Depends(get_db)):
+async def refresh_technician_ids(
+    db: Session = Depends(get_db), 
+    target_user: str = None, # Opcional: refrescar solo a "Juan"
+    force_all: bool = False  # Opcional: forzar re-scan de todos
+):
     """
-    Fuerza la búsqueda y actualización de IDs de técnicos para todos los usuarios.
-    Útil si el seed inicial falló por bloqueo de firewall.
+    Actualiza IDs de técnicos. 
+    Por defecto solo actualiza los que tienen technician_id nulo.
     """
-    users = db.query(User).all()
+    query = db.query(User)
+    if target_user:
+        query = query.filter(User.name.ilike(f"%{target_user}%"))
+    
+    users = query.all()
     updated = []
     errors = []
+    skipped = []
 
-    print("🔄 Starting manual ID refresh...")
+    print(f"🔄 Starting ID refresh. Candidates: {len(users)}")
     
+    count_processed = 0
+    MAX_PROCESS = 3 # Evitar timeout de Render (30s) procesando max 3 usuarios a la vez
+
     for user in users:
+        if count_processed >= MAX_PROCESS:
+            errors.append("Batch limit reached (max 3). Run again.")
+            break
+
+        # Skip si ya tiene ID y no forzamos
+        if user.technician_id and not force_all and not target_user:
+            skipped.append(user.name)
+            continue
+            
         try:
-            print(f"Checking user: {user.name}")
-            # Force search even if they have one? Maybe yes to be sure.
-            # Or only if None? Let's try to update all just in case.
+            print(f"🔍 Searching ID for: {user.name}")
+            count_processed += 1
+            
             tech_id = await find_technician_id_by_name(user.name)
             
             if tech_id:
                 user.technician_id = tech_id
                 updated.append(f"{user.name} -> {tech_id}")
             else:
-                errors.append(f"{user.name}: Not found in Helpdesk API")
+                errors.append(f"{user.name}: Not found in active tickets scan")
         except Exception as e:
             errors.append(f"{user.name}: Error {str(e)}")
             
     try:
         db.commit()
     except Exception as e:
-        return {"status": "error", "message": str(e)}
+        return {"status": "error", "message": f"DB Commit Error: {str(e)}"}
 
     return {
         "status": "completed",
+        "processed_count": count_processed,
         "updated_users": updated,
-        "not_found_or_error": errors
+        "skipped_already_set": skipped,
+        "errors_or_not_found": errors
     }
 
 @router.get("/connectivity")
