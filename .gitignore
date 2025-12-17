@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.env
+.venv
+venv/
+env/
+
+# Node
+node_modules/
+dist/
+.DS_Store
+
+# Logs
+*.log
+
+# Temp files
+temp_ids.txt
+temp_results.txt
