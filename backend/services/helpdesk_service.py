@@ -134,6 +134,8 @@ async def get_tickets_for_technician(technician_id: str) -> List[Dict]:
             "list_info": {
                 "row_count": row_count,
                 "start_index": start_index,
+                "sort_field": "created_time",
+                "sort_order": "desc",
                 "search_criteria": [
                     {"field": "technician.id", "condition": "is", "value": technician_id}
                 ]
