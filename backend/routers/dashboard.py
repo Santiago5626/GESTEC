@@ -28,6 +28,8 @@ class DashboardResponse(BaseModel):
     open_tickets_count: int
     stats: StatData
     recent_tickets: List[RecentTicket]
+    connection_error: bool = False
+    error_detail: Optional[str] = None
 
 # Helper para "decodificar" el usuario del token (Mock)
 async def get_current_user_id(technician_key: Optional[str] = Header(None, alias="X-Technician-ID")):
@@ -44,12 +46,17 @@ async def get_dashboard_stats(
     print(f"DEBUG: Dashboard Request - Tech ID: {tech_id}")
     
     tickets = []
+    connection_error = False
+    error_msg = None
+
     if tech_id and tech_id != "None":
          try:
             tickets = await get_tickets_for_technician(tech_id)
             print(f"DEBUG: Tickets found: {len(tickets)}")
          except Exception as e:
             print(f"DEBUG: Error fetching tickets: {e}")
+            connection_error = True
+            error_msg = str(e)
     else:
         print("DEBUG: No Tech ID provided or is None")
     
@@ -62,7 +69,7 @@ async def get_dashboard_stats(
     this_month_mock = len(tickets) + 3 
     
     return {
-        "user_name": user_name, # Return the header passed or default
+        "user_name": user_name,
         "open_tickets_count": len(tickets),
         "stats": {
             "completed": completed_mock,
@@ -70,5 +77,7 @@ async def get_dashboard_stats(
             "open": open_count,
             "this_month": this_month_mock
         },
-        "recent_tickets": tickets[:10] # Top 10 recent
+        "recent_tickets": tickets[:10],
+        "connection_error": connection_error,
+        "error_detail": error_msg
     }
