@@ -39,7 +39,7 @@ async def get_current_user_id(technician_key: Optional[str] = Header(None, alias
     return technician_key
 
 @router.get("/stats", response_model=DashboardResponse)
-async def get_dashboard_stats(
+def get_dashboard_stats(
     tech_id: Optional[str] = Header(None, alias="X-Technician-ID"), 
     user_name: Optional[str] = Header("Usuario", alias="X-User-Name")
 ):
@@ -51,7 +51,7 @@ async def get_dashboard_stats(
 
     if tech_id and tech_id != "None":
          try:
-            tickets = await get_tickets_for_technician(tech_id)
+            tickets = get_tickets_for_technician(tech_id)
             print(f"DEBUG: Tickets found: {len(tickets)}")
          except Exception as e:
             print(f"DEBUG: Error fetching tickets: {e}")

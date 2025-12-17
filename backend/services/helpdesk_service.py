@@ -28,7 +28,7 @@ TECHNICIAN_CACHE = {
     "daniel acosta": "309901"
 }
 
-async def find_technician_id_by_name(name: str) -> Optional[str]:
+def find_technician_id_by_name(name: str) -> Optional[str]:
     """
     Busca el ID de un técnico por su nombre escaneando tickets recientes.
     Retorna el ID si lo encuentra, o None.
@@ -68,6 +68,8 @@ async def find_technician_id_by_name(name: str) -> Optional[str]:
                 verify=False,
                 timeout=10
             )
+            # ... resto igual pero sin await
+            
             if response.status_code != 200:
                 print(f"API Error: {response.status_code}")
                 break
@@ -105,7 +107,7 @@ async def find_technician_id_by_name(name: str) -> Optional[str]:
             
     return None
 
-async def get_tickets_for_technician(technician_id: str) -> List[Dict]:
+def get_tickets_for_technician(technician_id: str) -> List[Dict]:
     """
     Obtiene los tickets abiertos/en servicio para un ID de técnico específico.
     Utiliza caché en memoria (TTL 5 min) para optimizar.
@@ -168,9 +170,6 @@ async def get_tickets_for_technician(technician_id: str) -> List[Dict]:
             
             if not requests_list:
                 break
-                
-            # Filter Closed just in case api returns them (though search criteria should handle it if specificied)
-            # API docs say request search criteria works.
             
             for req in requests_list:
                 status = req.get('status', {}).get('name', 'N/A')
@@ -181,7 +180,7 @@ async def get_tickets_for_technician(technician_id: str) -> List[Dict]:
                         "status": status,
                         "priority": req.get("priority", {}).get("name", "Media"),
                         "date": req.get("created_time", {}).get("display_value", "N/A"),
-                        "user_role": req.get("requester", {}).get("name", "Desconocido") # Using requester as secondary info line
+                        "user_role": req.get("requester", {}).get("name", "Desconocido")
                      })
 
             if not data.get("list_info", {}).get("has_more_rows", False):
@@ -201,7 +200,7 @@ async def get_tickets_for_technician(technician_id: str) -> List[Dict]:
     
     return all_tickets
 
-async def get_ticket_details(ticket_id: str) -> Optional[Dict]:
+def get_ticket_details(ticket_id: str) -> Optional[Dict]:
     """
     Obtiene los detalles completos de un ticket específico.
     """

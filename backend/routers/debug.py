@@ -10,7 +10,7 @@ from services.helpdesk_service import API_URL, HEADERS
 router = APIRouter(prefix="/api/debug")
 
 @router.get("/refresh-ids")
-async def refresh_technician_ids(
+def refresh_technician_ids(
     db: Session = Depends(get_db), 
     target_user: str = None, # Opcional: refrescar solo a "Juan"
     force_all: bool = False  # Opcional: forzar re-scan de todos
@@ -47,7 +47,7 @@ async def refresh_technician_ids(
             print(f"🔍 Searching ID for: {user.name}")
             count_processed += 1
             
-            tech_id = await find_technician_id_by_name(user.name)
+            tech_id = find_technician_id_by_name(user.name)
             
             if tech_id:
                 user.technician_id = tech_id

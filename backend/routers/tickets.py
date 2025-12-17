@@ -23,8 +23,8 @@ class TicketDetail(BaseModel):
     item: Optional[str] = None
 
 @router.get("/{ticket_id}", response_model=TicketDetail)
-async def get_ticket(ticket_id: str):
-    ticket = await get_ticket_details(ticket_id)
+def get_ticket(ticket_id: str):
+    ticket = get_ticket_details(ticket_id)
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket no encontrado")
     return ticket

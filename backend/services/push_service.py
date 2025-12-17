@@ -116,13 +116,16 @@ async def check_new_tickets_job():
             if not tech_id: continue
             
             try:
-                # 1. Fetch recent tickets
-                tickets = await helpdesk.get_tickets_for_technician(tech_id)
+                # 1. Fetch recent tickets (SYNC CALL in THREAD)
+                # Como get_tickets_for_technician ahora es sincrono (bloqueante),
+                # debemos correrlo en un thread para no bloquear el loop de APScheduler.
+                import asyncio
+                loop = asyncio.get_running_loop()
+                
+                tickets = await loop.run_in_executor(None, helpdesk.get_tickets_for_technician, tech_id)
                 
                 # 2. Filter new tickets (created/assigned recently)
-                # Como get_tickets devuelve strings de fecha a veces, asumimos
-                # que si el ticket está en el top de la lista (sort desc) y no lo hemos visto, es nuevo.
-                # Simplificación: Usar un ID tracker.
+                # ...
                 
                 # Check top ticket
                 if not tickets: continue
