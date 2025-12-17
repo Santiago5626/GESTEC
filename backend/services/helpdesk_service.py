@@ -3,15 +3,22 @@ import json
 import warnings
 from typing import Optional, Dict, List
 
+import os
+
 # Suppress warnings
 warnings.filterwarnings('ignore', message='Unverified HTTPS request')
 
-API_URL = "https://helpdesk.estrategias.co:9010/api/v3/requests"
+# Default to original, but verify if ENV VAR is set (useful for proxy/tunnel)
+DEFAULT_URL = "https://helpdesk.estrategias.co:9010/api/v3/requests"
+API_URL = os.getenv("HELPDESK_API_URL", DEFAULT_URL)
+
 TOKEN = "0A6475A1-D3A4-4B74-B608-01D75A14B307"
 
 HEADERS = {
     "TECHNICIAN_KEY": TOKEN,
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
+    # Bypass LocalTunnel reminder page
+    "Bypass-Tunnel-Reminder": "true" 
 }
 
 # Simple in-memory cache for technician IDs to avoid repeated slow searches
