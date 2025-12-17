@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import dashboard, auth
+from routers import dashboard, auth, tickets
 
 app = FastAPI(title="Helpdesk API", version="1.0.0")
 
@@ -19,8 +19,11 @@ app.add_middleware(
 )
 
 # Incluir routers
+from routers import dashboard, auth, tickets
+
 app.include_router(dashboard.router)
 app.include_router(auth.router)
+app.include_router(tickets.router)
 
 @app.get("/")
 async def root():

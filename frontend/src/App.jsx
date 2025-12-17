@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AdminDashboard from './pages/AdminDashboard';
 import Login from './pages/Login';
 import TechnicalDashboard from './pages/TechnicalDashboard';
+import TicketDetail from './pages/TicketDetail';
 
 // Componente simple para proteger rutas
 const ProtectedRoute = ({ children, allowedRole }) => {
@@ -49,6 +50,12 @@ function App() {
         <Route path="/technical" element={
           <ProtectedRoute allowedRole="technical">
             <TechnicalDashboard />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/tickets/:id" element={
+          <ProtectedRoute>
+            <TicketDetail />
           </ProtectedRoute>
         } />
       </Routes>

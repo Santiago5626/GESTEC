@@ -4,6 +4,7 @@ import AppLayout from '../components/layout/AppLayout';
 import WelcomeBanner from '../components/dashboard/WelcomeBanner';
 import StatCard from '../components/dashboard/StatCard';
 import TicketCard from '../components/dashboard/TicketCard';
+import StatusAnimation from '../components/common/StatusAnimation';
 
 // Iconos para stats
 const CheckCircleIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>;
@@ -21,6 +22,21 @@ function AdminDashboard() {
         const user = userStr ? JSON.parse(userStr) : null;
         const techId = user?.technician_id;
 
+        const CACHE_KEY = `admin_dashboard_cache_${techId}`;
+        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+
+        // 1. Check Cache
+        const cached = sessionStorage.getItem(CACHE_KEY);
+        if (cached) {
+            const { timestamp, data: cachedData } = JSON.parse(cached);
+            if (Date.now() - timestamp < CACHE_DURATION) {
+                console.log("Using cached admin dashboard data");
+                setData(cachedData);
+                setLoading(false);
+                return;
+            }
+        }
+
         axios.get('http://localhost:8000/api/dashboard/stats', {
             headers: {
                 'X-Technician-ID': techId || '',
@@ -30,6 +46,11 @@ function AdminDashboard() {
             .then(res => {
                 setData(res.data);
                 setLoading(false);
+                // 2. Save to Cache
+                sessionStorage.setItem(CACHE_KEY, JSON.stringify({
+                    timestamp: Date.now(),
+                    data: res.data
+                }));
             })
             .catch(err => {
                 console.error("Error fetching data", err);
@@ -37,8 +58,17 @@ function AdminDashboard() {
             });
     }, []);
 
-    if (loading) return <div className="p-4 text-center mt-10">Cargando...</div>;
-    if (!data) return <div className="p-4 text-center mt-10 text-red-500">Error al cargar datos. Verificar backend.</div>;
+    if (loading) return (
+        <AppLayout>
+            <StatusAnimation status="loading" message="Cargando panel de control..." />
+        </AppLayout>
+    );
+
+    if (!data) return (
+        <AppLayout>
+            <StatusAnimation status="error" message="Error de conexión. Verifica que el backend esté activo." />
+        </AppLayout>
+    );
 
     return (
         <AppLayout>

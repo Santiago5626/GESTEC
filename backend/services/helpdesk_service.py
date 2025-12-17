@@ -169,3 +169,47 @@ async def get_tickets_for_technician(technician_id: str) -> List[Dict]:
             break
 
     return all_tickets
+
+async def get_ticket_details(ticket_id: str) -> Optional[Dict]:
+    """
+    Obtiene los detalles completos de un ticket específico.
+    """
+    url = f"{API_URL}/{ticket_id}"
+    print(f"Fetching details for ticket: {ticket_id}")
+    
+    try:
+        response = requests.get(
+            url,
+            headers=HEADERS,
+            verify=False,
+            timeout=10
+        )
+        
+        if response.status_code != 200:
+            print(f"Error fetching ticket details: {response.status_code}")
+            return None
+            
+        data = response.json()
+        req = data.get("request", {})
+        
+        if not req:
+            return None
+            
+        return {
+            "id": req.get("id"),
+            "subject": req.get("subject"),
+            "status": (req.get("status") or {}).get("name"),
+            "priority": (req.get("priority") or {}).get("name", "Baja"),
+            "requester": (req.get("requester") or {}).get("name", "Desconocido"),
+            "technician": (req.get("technician") or {}).get("name", "Sin asignar"),
+            "group": (req.get("group") or {}).get("name", "General"),
+            "created_time": (req.get("created_time") or {}).get("display_value"),
+            "description": req.get("description", "Sin descripción"),
+            "category": (req.get("category") or {}).get("name"),
+            "subcategory": (req.get("subcategory") or {}).get("name"),
+            "item": (req.get("item") or {}).get("name"),
+        }
+        
+    except Exception as e:
+        print(f"Exception fetching ticket details: {e}")
+        return None

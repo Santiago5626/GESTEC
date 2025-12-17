@@ -1,8 +1,15 @@
 import React from 'react';
 
+import { useNavigate } from 'react-router-dom';
+
 export default function TicketCard({ ticket }) {
+    const navigate = useNavigate();
+
     return (
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 relative mb-4 hover:shadow-md transition-shadow">
+        <div
+            onClick={() => navigate(`/tickets/${ticket.id}`)}
+            className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 relative mb-4 hover:shadow-md transition-shadow cursor-pointer"
+        >
             <div className="flex justify-between items-start mb-1">
                 <span className="text-xs font-semibold text-gray-400">#{ticket.id}</span>
                 <span className="bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5 rounded-full font-medium">
@@ -16,7 +23,7 @@ export default function TicketCard({ ticket }) {
             <div className="flex justify-between items-end">
                 <span className="text-xs text-gray-400">{ticket.date}</span>
                 <span className={`text-xs font-medium ${ticket.priority === 'Alta' ? 'text-red-500' :
-                        ticket.priority === 'Media' ? 'text-orange-500' : 'text-green-500'
+                    ticket.priority === 'Media' ? 'text-orange-500' : 'text-green-500'
                     }`}>
                     {ticket.priority}
                 </span>
