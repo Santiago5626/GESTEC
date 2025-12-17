@@ -10,3 +10,6 @@ class User(Base):
     hashed_password = Column(String)
     role = Column(String) # 'admin' or 'technical'
     technician_id = Column(String, nullable=True) # ID from external API
+    
+    from sqlalchemy.orm import relationship
+    subscriptions = relationship("PushSubscription", back_populates="user", cascade="all, delete-orphan")

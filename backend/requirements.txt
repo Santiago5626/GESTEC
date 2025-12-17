@@ -5,3 +5,5 @@ asyncpg
 requests
 python-dotenv
 pydantic
+pywebpush
+apscheduler

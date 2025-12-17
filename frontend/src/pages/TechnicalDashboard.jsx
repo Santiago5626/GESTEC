@@ -5,6 +5,7 @@ import WelcomeBanner from '../components/dashboard/WelcomeBanner';
 import StatCard from '../components/dashboard/StatCard';
 import TicketCard from '../components/dashboard/TicketCard';
 import StatusAnimation from '../components/common/StatusAnimation';
+import NotificationButton from '../components/common/NotificationButton';
 
 // Iconos para stats (Reutilizados)
 const CheckCircleIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>;
@@ -77,6 +78,11 @@ export default function TechnicalDashboard() {
                 userName={data.user_name && data.user_name !== 'Usuario' ? data.user_name : (JSON.parse(localStorage.getItem('user'))?.name || 'Usuario')}
                 openTickets={data.open_tickets_count}
             />
+
+            {/* Notification Subscription */}
+            <div className="flex justify-center mb-6">
+                <NotificationButton />
+            </div>
 
             {/* KPI Grid - Reused structure */}
             <div className="grid grid-cols-2 gap-4">

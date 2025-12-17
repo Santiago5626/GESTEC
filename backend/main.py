@@ -20,11 +20,23 @@ app.add_middleware(
 )
 
 # Incluir routers
-from routers import dashboard, auth, tickets
+from routers import dashboard, auth, tickets, notifications
 
 app.include_router(dashboard.router)
 app.include_router(auth.router)
 app.include_router(tickets.router)
+app.include_router(notifications.router)
+
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from services.push_service import check_new_tickets_job
+
+@app.on_event("startup")
+async def start_scheduler():
+    scheduler = AsyncIOScheduler()
+    # Check every 5 minutes (300 seconds)
+    scheduler.add_job(check_new_tickets_job, "interval", seconds=300)
+    scheduler.start()
+    print("Scheduler started for ticket polling.")
 
 @app.get("/")
 async def root():

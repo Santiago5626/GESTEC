@@ -1,6 +1,7 @@
 import asyncio
 from database import engine, Base, AsyncSessionLocal
 from models.user import User
+from models.subscription import PushSubscription
 from sqlalchemy.future import select
 
 async def init_db():
