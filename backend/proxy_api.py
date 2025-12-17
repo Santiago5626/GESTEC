@@ -8,6 +8,11 @@ PORT = 9999
 
 app = FastAPI(title="Helpdesk Relay Proxy")
 
+@app.get("/")
+def health_check():
+    print("✅ Health Check received!")
+    return {"status": "Proxy is running", "target": TARGET_BASE_URL}
+
 @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 async def proxy_request(path: str, request: Request):
     """
@@ -15,21 +20,23 @@ async def proxy_request(path: str, request: Request):
     """
     target_url = f"{TARGET_BASE_URL}/{path}"
     
-    print(f"🔄 Proxying: {request.method} {target_url}")
+    print(f"⬇️ REQUEST RECEIVED")
+    print(f"👉 Method: {request.method}")
+    print(f"👉 Target: {target_url}")
+    print(f"👉 Params: {dict(request.query_params)}")
 
     # 1. Preparar Headers (Limpiando Host para evitar errores SSL/Routing)
     headers = dict(request.headers)
     headers.pop("host", None)
-    headers.pop("content-length", None) # Requests lo recalcula
+    headers.pop("content-length", None)
     
-    # Headers de navegador para pasar filtros
     headers["User-Agent"] = "Mozilla/5.0 (Proxy Relay)"
 
     # 2. Leer Body
     body = await request.body()
 
     try:
-        # 3. Forward Request (Verificación SSL desactivada para red interna/corp)
+        # 3. Forward Request
         resp = requests.request(
             method=request.method,
             url=target_url,
@@ -39,6 +46,12 @@ async def proxy_request(path: str, request: Request):
             verify=False, 
             timeout=30
         )
+        
+        print(f"⬆️ RESPONSE FROM HELPDESK")
+        print(f"👈 Status: {resp.status_code}")
+        print(f"👈 Body Preview: {resp.text[:200]}...") # Print first 200 chars
+
+        # 4. Retornar Respuesta
         
         # 4. Retornar Respuesta tal cual
         # Excluir headers problemáticos de hop-by-hop

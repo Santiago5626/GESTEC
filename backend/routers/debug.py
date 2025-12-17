@@ -1,9 +1,51 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from database import get_db
+from models.user import User
+from services.helpdesk_service import find_technician_id_by_name
 import requests
 import json
 from services.helpdesk_service import API_URL, HEADERS
 
 router = APIRouter(prefix="/api/debug")
+
+@router.get("/refresh-ids")
+async def refresh_technician_ids(db: Session = Depends(get_db)):
+    """
+    Fuerza la búsqueda y actualización de IDs de técnicos para todos los usuarios.
+    Útil si el seed inicial falló por bloqueo de firewall.
+    """
+    users = db.query(User).all()
+    updated = []
+    errors = []
+
+    print("🔄 Starting manual ID refresh...")
+    
+    for user in users:
+        try:
+            print(f"Checking user: {user.name}")
+            # Force search even if they have one? Maybe yes to be sure.
+            # Or only if None? Let's try to update all just in case.
+            tech_id = await find_technician_id_by_name(user.name)
+            
+            if tech_id:
+                user.technician_id = tech_id
+                updated.append(f"{user.name} -> {tech_id}")
+            else:
+                errors.append(f"{user.name}: Not found in Helpdesk API")
+        except Exception as e:
+            errors.append(f"{user.name}: Error {str(e)}")
+            
+    try:
+        db.commit()
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+    return {
+        "status": "completed",
+        "updated_users": updated,
+        "not_found_or_error": errors
+    }
 
 @router.get("/connectivity")
 async def check_connectivity():
