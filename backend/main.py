@@ -20,12 +20,13 @@ app.add_middleware(
 )
 
 # Incluir routers
-from routers import dashboard, auth, tickets, notifications
+from routers import dashboard, auth, tickets, notifications, debug
 
 app.include_router(dashboard.router)
 app.include_router(auth.router)
 app.include_router(tickets.router)
 app.include_router(notifications.router)
+app.include_router(debug.router)
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from services.push_service import check_new_tickets_job
